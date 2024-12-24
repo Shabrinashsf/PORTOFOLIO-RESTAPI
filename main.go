@@ -1,7 +1,11 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/initializers"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/migrations"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,11 +17,15 @@ func init() {
 func main() {
 	r := gin.Default()
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	if len(os.Args) > 1 && os.Args[1] == "migrate" {
+		if err := migrations.Migrate(); err != nil {
+			log.Fatalf("Migration failed: %v", err)
+		} else {
+			log.Println("Migration executed successfully.")
+		}
+	} else {
+		log.Println("No valid argument provided. Usage: `go run main.go migrate`")
+	}
 
 	r.Run()
 }
