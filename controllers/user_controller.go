@@ -16,12 +16,14 @@ import (
 )
 
 // register, public, done
-// login, public
+// login, public, done
+
+// update, auth, by user
+// get user all, auth, by admin
+// get user by id, auth, by admin
+// delete user, auth, by admin
+
 // about me, auth
-// update, auth, done
-// get user all, auth, done
-// get user by id, auth, done
-// delete user by admin, auth
 
 func RegisterUser(c *gin.Context) {
 	var body struct {
@@ -154,32 +156,63 @@ func Validate(c *gin.Context) {
 	})
 }
 
-func GetAllUser(c *gin.Context) {
+func GetAllUsers(c *gin.Context) {
+	var users []models.User
 
-	var user []models.User
+	if err := initializers.DB.Find(&users).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Failed to fetch users"})
+		return
+	}
 
-	initializers.DB.Find(&user)
-
-	c.JSON(http.StatusOK, gin.H{"user": user})
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "Success to fetch users",
+		"users":   users,
+	})
 }
 
 func GetUserByID(c *gin.Context) {
-
-	var user models.User
 	id := c.Param("id")
 
-	if err := initializers.DB.First(&user, id).Error; err != nil {
-		switch err {
-		case gorm.ErrRecordNotFound:
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "Data tidak ditemukan"})
-			return
-		default:
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-			return
-		}
+	parsedID, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid UUID format",
+		})
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": user})
+	var user models.User
+	result := initializers.DB.First(&user, "id = ?", parsedID)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"status":  false,
+				"message": "User not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  false,
+				"message": "Failed to fetch user",
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "Success to fetch user",
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"role":  user.Role,
+		},
+	})
 }
 
 func UpdateUser(c *gin.Context) {

@@ -13,5 +13,9 @@ func User(r *gin.Engine) {
 		routes.POST("/register", controllers.RegisterUser)
 		routes.POST("/login", controllers.Login)
 		routes.GET("/validate", middleware.Authorization, controllers.Validate)
+
+		// Admin
+		routes.GET("/user", middleware.Authorization, middleware.AdminOnly, controllers.GetAllUsers)
+		routes.GET("/user/:id", middleware.Authorization, middleware.AdminOnly, controllers.GetUserByID)
 	}
 }
