@@ -13,6 +13,7 @@ func User(r *gin.Engine) {
 		routes.POST("/register", controllers.RegisterUser)
 		routes.POST("/login", controllers.Login)
 		routes.GET("/validate", middleware.Authorization, controllers.Validate)
+		routes.PUT("/user/:id", middleware.Authorization, controllers.UpdateUser)
 
 		// Admin
 		routes.GET("/user", middleware.Authorization, middleware.AdminOnly, controllers.GetAllUsers)

@@ -17,10 +17,10 @@ import (
 
 // register, public, done
 // login, public, done
-
-// update, auth, by user
 // get user all, auth, by admin
 // get user by id, auth, by admin
+
+// update, auth, by user
 // delete user, auth, by admin
 
 // about me, auth
@@ -216,21 +216,79 @@ func GetUserByID(c *gin.Context) {
 }
 
 func UpdateUser(c *gin.Context) {
+	idParam := c.Param("id")
 
-	var produk models.User
-	id := c.Param("id")
-
-	if err := c.ShouldBindJSON(&produk); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	_, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid UUID format for user ID",
+		})
 		return
 	}
 
-	if initializers.DB.Model(&produk).Where("id = ?", id).Updates(&produk).RowsAffected == 0 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Tidak dapat mengupdate produk"})
+	authUser, _ := c.Get("user")
+	authUserData := authUser.(models.User)
+
+	if idParam != authUserData.ID.String() {
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  false,
+			"message": "You are not authorized to update this user",
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Data berhasil diperbaharui"})
+	var userInput struct {
+		Name   string `json:"name"`
+		NoTelp string `json:"no_telp"`
+	}
+
+	if err := c.ShouldBindJSON(&userInput); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid input data",
+		})
+		return
+	}
+
+	var user models.User
+	result := initializers.DB.First(&user, "id = ?", idParam)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"status":  false,
+				"message": "User not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  false,
+				"message": "Failed to fetch user",
+			})
+		}
+		return
+	}
+
+	user.Name = userInput.Name
+	user.NoTelp = userInput.NoTelp
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Failed to update user",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "User successfully updated",
+		"user": gin.H{
+			"id":      user.ID,
+			"name":    user.Name,
+			"no_telp": user.NoTelp,
+		},
+	})
 }
 
 func DeleteUser(c *gin.Context) {
