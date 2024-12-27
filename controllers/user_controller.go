@@ -292,22 +292,47 @@ func UpdateUser(c *gin.Context) {
 }
 
 func DeleteUser(c *gin.Context) {
+	idParam := c.Param("id")
+
+	_, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid UUID format for user ID",
+		})
+		return
+	}
 
 	var user models.User
+	result := initializers.DB.First(&user, "id = ?", idParam)
 
-	id := c.Param("id")
-
-	if err := initializers.DB.Where("id = ?", id).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Record not found!"})
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"status":  false,
+				"message": "User not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  false,
+				"message": "Failed to fetch user",
+			})
+		}
 		return
 	}
 
-	if initializers.DB.Delete(&user).RowsAffected == 0 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Tidak dapat menghapus data"})
+	if err := initializers.DB.Delete(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Failed to delete user",
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Data berhasil dihapus"})
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "User successfully deleted",
+	})
 }
 
 /*// Routes
