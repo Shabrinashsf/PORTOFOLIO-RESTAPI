@@ -15,16 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// register, public, done
-// login, public, done
-// get user all, auth, by admin
-// get user by id, auth, by admin
-
-// update, auth, by user
-// delete user, auth, by admin
-
-// about me, auth
-
 func RegisterUser(c *gin.Context) {
 	var body struct {
 		Name     string `json:"name"`
@@ -148,7 +138,7 @@ func Login(c *gin.Context) {
 	})
 }
 
-func Validate(c *gin.Context) {
+func AboutMe(c *gin.Context) {
 	user, _ := c.Get("user")
 
 	c.JSON(http.StatusOK, gin.H{
@@ -334,11 +324,3 @@ func DeleteUser(c *gin.Context) {
 		"message": "User successfully deleted",
 	})
 }
-
-/*// Routes
-r.GET("/api/user", produkcontroller.Index)
-r.GET("/api/user/:id", produkcontroller.Show)
-r.POST("/api/user", produkcontroller.Create)
-r.PUT("/api/user/:id", produkcontroller.Update)
-r.DELETE("/api/user/:id", produkcontroller.Delete)
-*/
