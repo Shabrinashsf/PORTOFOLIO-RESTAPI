@@ -324,3 +324,64 @@ func DeleteUser(c *gin.Context) {
 		"message": "User successfully deleted",
 	})
 }
+
+func ValidateUser(c *gin.Context) {
+	idParam := c.Param("id")
+
+	_, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid UUID format for user ID",
+		})
+		return
+	}
+
+	var requestBody struct {
+		IsVerified bool `json:"is_verified"`
+	}
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid request body",
+		})
+		return
+	}
+
+	var user models.User
+	result := initializers.DB.First(&user, "id = ?", idParam)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"status":  false,
+				"message": "User not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  false,
+				"message": "Failed to fetch user",
+			})
+		}
+		return
+	}
+
+	user.IsVerified = requestBody.IsVerified
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Failed to update user validation status",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "User validation status updated successfully",
+		"user": gin.H{
+			"id":          user.ID,
+			"name":        user.Name,
+			"is_verified": user.IsVerified,
+		},
+	})
+}

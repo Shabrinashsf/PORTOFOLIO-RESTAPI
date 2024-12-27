@@ -19,5 +19,6 @@ func User(r *gin.Engine) {
 		routes.GET("/user", middleware.Authorization, middleware.AdminOnly, controllers.GetAllUsers)
 		routes.GET("/user/:id", middleware.Authorization, middleware.AdminOnly, controllers.GetUserByID)
 		routes.DELETE("/user/:id", middleware.Authorization, middleware.AdminOnly, controllers.DeleteUser)
+		routes.PUT("/user/validate/:id", middleware.Authorization, middleware.AdminOnly, controllers.ValidateUser)
 	}
 }
