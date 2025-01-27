@@ -5,9 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/constant"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/dto"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/initializers"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/models"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/service"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -15,59 +17,40 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterUser(c *gin.Context) {
-	var body struct {
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
-		NoTelp   string `json:"no_telp"`
+type (
+	UserController interface {
+		RegisterUser(ctx *gin.Context)
 	}
 
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Failed to read body",
-		})
+	userController struct {
+		userService service.UserService
+	}
+)
+
+func NewUserController(us service.UserService) UserController {
+	return &userController{
+		userService: us,
+	}
+}
+
+func (c *userController) RegisterUser(ctx *gin.Context) {
+	var body dto.RegisterUserRequest
+
+	if err := ctx.ShouldBind(&body); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
-
+	response, err := c.userService.RegisterUser(ctx.Request.Context(), body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Failed to hash password",
-		})
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_REGISTER_USER, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	user := models.User{
-		Name:       body.Name,
-		Email:      body.Email,
-		Password:   string(hash),
-		NoTelp:     body.NoTelp,
-		Role:       constant.ROLE_USER,
-		IsVerified: false,
-	}
-	result := initializers.DB.Create(&user)
-
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Failed to create user",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "user created successfully",
-		"user": gin.H{
-			"name":    user.Name,
-			"email":   user.Email,
-			"no_telp": user.NoTelp,
-		},
-	})
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_REGISTER_USER, response)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func Login(c *gin.Context) {

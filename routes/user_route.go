@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func User(r *gin.Engine) {
+func User(r *gin.Engine, userController controllers.UserController) {
 	routes := r.Group("/api")
 	{
 		// User
-		routes.POST("/register", controllers.RegisterUser)
+		routes.POST("/register", userController.RegisterUser)
 		routes.POST("/login", controllers.Login)
 		routes.GET("/me", middleware.Authorization, controllers.AboutMe)
 		routes.PUT("/user/:id", middleware.Authorization, controllers.UpdateUser)
