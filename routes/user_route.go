@@ -11,7 +11,7 @@ func User(r *gin.Engine, userController controllers.UserController) {
 	{
 		// User
 		routes.POST("/register", userController.RegisterUser)
-		routes.POST("/login", controllers.Login)
+		routes.POST("/login", userController.Login)
 		routes.GET("/me", middleware.Authorization, controllers.AboutMe)
 		routes.PUT("/user/:id", middleware.Authorization, controllers.UpdateUser)
 

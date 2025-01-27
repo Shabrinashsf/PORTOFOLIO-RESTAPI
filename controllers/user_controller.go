@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/dto"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/initializers"
@@ -11,15 +9,14 @@ import (
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/service"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type (
 	UserController interface {
 		RegisterUser(ctx *gin.Context)
+		Login(ctx *gin.Context)
 	}
 
 	userController struct {
@@ -53,72 +50,25 @@ func (c *userController) RegisterUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func Login(c *gin.Context) {
-	var body struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+func (c *userController) Login(ctx *gin.Context) {
+	var body dto.UserLoginRequest
 
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Failed to read body",
-			"data":    nil,
-		})
+	if err := ctx.ShouldBind(&body); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
 
-	var user models.User
-	initializers.DB.First(&user, "email = ?", body.Email)
-
-	if user.ID == uuid.Nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"status":  false,
-			"message": "Email not registered",
-			"data":    nil,
-		})
-		return
-	}
-
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
-
+	response, err := c.userService.Verify(ctx.Request.Context(), body)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"status":  false,
-			"message": "Invalid password",
-			"data":    nil,
-		})
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_LOGIN, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user": user.ID.String(),
-		"role": user.Role,
-		"exp":  time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
-
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"status":  false,
-			"message": "Failed to create token",
-			"data":    nil,
-		})
-		return
-	}
-
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 3600*24, "", "", false, true)
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "Success login",
-		"data": gin.H{
-			"token": tokenString,
-			"role":  user.Role,
-		},
-	})
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_LOGIN, response)
+	ctx.SetCookie("Authorization", response.Token, 3600*24, "", "", false, true)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func AboutMe(c *gin.Context) {
