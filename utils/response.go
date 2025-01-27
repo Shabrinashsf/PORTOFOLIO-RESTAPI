@@ -13,7 +13,6 @@ func BuildResponseSuccess(message string, data any) Response {
 		Message: message,
 		Data:    data,
 	}
-
 	return res
 }
 

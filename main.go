@@ -4,9 +4,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/controllers"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/initializers"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/migrations"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/repository"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/routes"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,9 +28,20 @@ func main() {
 		return
 	}
 
-	r := gin.Default()
+	var (
+		// Implementation Dependency Injection
+		// Repository
+		userRepository repository.UserRepository = repository.NewUserRepository(initializers.DB)
 
-	routes.User(r)
+		// Service
+		userService service.UserService = service.NewUserService(userRepository)
+
+		// Controller
+		userController controllers.UserController = controllers.NewUserController(userService)
+	)
+
+	r := gin.Default()
+	routes.User(r, userController)
 
 	if err := r.Run(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
