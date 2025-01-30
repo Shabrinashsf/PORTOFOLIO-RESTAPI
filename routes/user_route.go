@@ -12,13 +12,13 @@ func User(r *gin.Engine, userController controllers.UserController) {
 		// User
 		routes.POST("/register", userController.RegisterUser)
 		routes.POST("/login", userController.Login)
-		routes.GET("/me", middleware.Authorization, controllers.AboutMe)
-		routes.PUT("/user/:id", middleware.Authorization, controllers.UpdateUser)
+		routes.GET("/me", middleware.Authenticate(), controllers.AboutMe)
+		routes.PUT("/user/:id", middleware.Authenticate(), controllers.UpdateUser)
 
 		// Admin
-		routes.GET("/user", middleware.Authorization, middleware.AdminOnly, controllers.GetAllUsers)
-		routes.GET("/user/:id", middleware.Authorization, middleware.AdminOnly, controllers.GetUserByID)
-		routes.DELETE("/user/:id", middleware.Authorization, middleware.AdminOnly, controllers.DeleteUser)
-		routes.PUT("/user/validate/:id", middleware.Authorization, middleware.AdminOnly, controllers.ValidateUser)
+		routes.GET("/user", middleware.Authenticate(), middleware.AdminOnly(), controllers.GetAllUsers)
+		routes.GET("/user/:id", middleware.Authenticate(), middleware.AdminOnly(), controllers.GetUserByID)
+		routes.DELETE("/user/:id", middleware.Authenticate(), middleware.AdminOnly(), controllers.DeleteUser)
+		routes.PUT("/user/validate/:id", middleware.Authenticate(), middleware.AdminOnly(), controllers.ValidateUser)
 	}
 }

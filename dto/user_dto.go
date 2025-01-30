@@ -8,9 +8,8 @@ const (
 	MESSAGE_SUCCESS_LOGIN         = "success login user"
 
 	// FAILED
-	MESSAGE_FAILED_GET_DATA_FROM_BODY = "failed get data from body"
-	MESSAGE_FAILED_REGISTER_USER      = "failed add user"
-	MESSAGE_FAILED_LOGIN              = "failed login user"
+	MESSAGE_FAILED_REGISTER_USER = "failed add user"
+	MESSAGE_FAILED_LOGIN         = "failed login user"
 )
 
 var (
