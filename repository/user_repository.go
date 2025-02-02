@@ -11,6 +11,7 @@ type (
 	UserRepository interface {
 		CheckEmail(ctx context.Context, tx *gorm.DB, email string) (models.User, bool, error)
 		RegisterUser(ctx context.Context, tx *gorm.DB, user models.User) (models.User, error)
+		GetAllUser(ctx context.Context) ([]models.User, error)
 	}
 
 	userRepository struct {
@@ -47,4 +48,12 @@ func (r *userRepository) RegisterUser(ctx context.Context, tx *gorm.DB, user mod
 	}
 
 	return user, nil
+}
+
+func (r *userRepository) GetAllUser(ctx context.Context) ([]models.User, error) {
+	var users []models.User
+	if err := r.db.Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
 }

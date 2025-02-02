@@ -17,6 +17,7 @@ type (
 	UserController interface {
 		RegisterUser(ctx *gin.Context)
 		Login(ctx *gin.Context)
+		GetAllUser(ctx *gin.Context)
 	}
 
 	userController struct {
@@ -67,10 +68,11 @@ func (c *userController) Login(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_LOGIN, response)
-	ctx.SetCookie("Authorization", response.Token, 3600*24, "", "", false, true)
+	// ctx.SetCookie("Authorization", response.Token, 3600*24, "", "", false, true)
 	ctx.JSON(http.StatusOK, res)
 }
 
+// kayaknya gausah, tp kalo mau dibagusin sih cik
 func AboutMe(c *gin.Context) {
 	user, _ := c.Get("user")
 
@@ -79,29 +81,41 @@ func AboutMe(c *gin.Context) {
 	})
 }
 
-func GetAllUsers(c *gin.Context) {
-	var users []models.User
+func (c *userController) GetAllUser(ctx *gin.Context) {
+	users, err := c.userService.GetAllUser(ctx)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_FETCH_USERS, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_FETCH_USERS, users)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func GetAllUsers(ctx *gin.Context) {
+	var users dto.GetAllUser
+	//var users []models.User
 
 	if err := initializers.DB.Find(&users).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  false,
 			"message": "Failed to fetch users"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "Success to fetch users",
 		"users":   users,
 	})
 }
 
-func GetUserByID(c *gin.Context) {
-	id := c.Param("id")
+func GetUserByID(ctx *gin.Context) {
+	id := ctx.Param("id")
 
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid UUID format",
 		})
@@ -113,12 +127,12 @@ func GetUserByID(c *gin.Context) {
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{
+			ctx.JSON(http.StatusNotFound, gin.H{
 				"status":  false,
 				"message": "User not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
 				"message": "Failed to fetch user",
 			})
@@ -126,7 +140,7 @@ func GetUserByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "Success to fetch user",
 		"user": gin.H{
@@ -138,23 +152,23 @@ func GetUserByID(c *gin.Context) {
 	})
 }
 
-func UpdateUser(c *gin.Context) {
-	idParam := c.Param("id")
+func UpdateUser(ctx *gin.Context) {
+	idParam := ctx.Param("id")
 
 	_, err := uuid.Parse(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid UUID format for user ID",
 		})
 		return
 	}
 
-	authUser, _ := c.Get("user")
+	authUser, _ := ctx.Get("user")
 	authUserData := authUser.(models.User)
 
 	if idParam != authUserData.ID.String() {
-		c.JSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  false,
 			"message": "You are not authorized to update this user",
 		})
@@ -166,8 +180,8 @@ func UpdateUser(c *gin.Context) {
 		NoTelp string `json:"no_telp"`
 	}
 
-	if err := c.ShouldBindJSON(&userInput); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := ctx.ShouldBindJSON(&userInput); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid input data",
 		})
@@ -179,12 +193,12 @@ func UpdateUser(c *gin.Context) {
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{
+			ctx.JSON(http.StatusNotFound, gin.H{
 				"status":  false,
 				"message": "User not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
 				"message": "Failed to fetch user",
 			})
@@ -196,14 +210,14 @@ func UpdateUser(c *gin.Context) {
 	user.NoTelp = userInput.NoTelp
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  false,
 			"message": "Failed to update user",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "User successfully updated",
 		"user": gin.H{
@@ -214,12 +228,12 @@ func UpdateUser(c *gin.Context) {
 	})
 }
 
-func DeleteUser(c *gin.Context) {
-	idParam := c.Param("id")
+func DeleteUser(ctx *gin.Context) {
+	idParam := ctx.Param("id")
 
 	_, err := uuid.Parse(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid UUID format for user ID",
 		})
@@ -231,12 +245,12 @@ func DeleteUser(c *gin.Context) {
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{
+			ctx.JSON(http.StatusNotFound, gin.H{
 				"status":  false,
 				"message": "User not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
 				"message": "Failed to fetch user",
 			})
@@ -245,25 +259,25 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	if err := initializers.DB.Delete(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  false,
 			"message": "Failed to delete user",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "User successfully deleted",
 	})
 }
 
-func ValidateUser(c *gin.Context) {
-	idParam := c.Param("id")
+func ValidateUser(ctx *gin.Context) {
+	idParam := ctx.Param("id")
 
 	_, err := uuid.Parse(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid UUID format for user ID",
 		})
@@ -273,8 +287,8 @@ func ValidateUser(c *gin.Context) {
 	var requestBody struct {
 		IsVerified bool `json:"is_verified"`
 	}
-	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid request body",
 		})
@@ -285,12 +299,12 @@ func ValidateUser(c *gin.Context) {
 	result := initializers.DB.First(&user, "id = ?", idParam)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{
+			ctx.JSON(http.StatusNotFound, gin.H{
 				"status":  false,
 				"message": "User not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
 				"message": "Failed to fetch user",
 			})
@@ -301,14 +315,14 @@ func ValidateUser(c *gin.Context) {
 	user.IsVerified = requestBody.IsVerified
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  false,
 			"message": "Failed to update user validation status",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "User validation status updated successfully",
 		"user": gin.H{

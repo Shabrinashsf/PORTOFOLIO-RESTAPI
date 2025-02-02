@@ -18,6 +18,7 @@ type (
 	UserService interface {
 		RegisterUser(ctx context.Context, req dto.RegisterUserRequest) (dto.RegisterUserResponse, error)
 		Verify(ctx context.Context, req dto.UserLoginRequest) (dto.UserLoginResponse, error)
+		GetAllUser(ctx context.Context) ([]dto.GetAllUser, error)
 	}
 
 	userService struct {
@@ -26,7 +27,9 @@ type (
 )
 
 func NewUserService(userRepo repository.UserRepository) UserService {
-	return &userService{userRepo: userRepo}
+	return &userService{
+		userRepo: userRepo,
+	}
 }
 
 var (
@@ -109,4 +112,24 @@ func (s *userService) Verify(ctx context.Context, req dto.UserLoginRequest) (dto
 		Token: tokenString,
 		Role:  user.Role,
 	}, nil
+}
+
+func (s *userService) GetAllUser(ctx context.Context) ([]dto.GetAllUser, error) {
+	users, err := s.userRepo.GetAllUser(ctx)
+	if err != nil {
+		return []dto.GetAllUser{}, dto.ErrFailedGetUsers
+	}
+
+	var result []dto.GetAllUser
+	for _, user := range users {
+		result = append(result, dto.GetAllUser{
+			Name:        user.Name,
+			Email:       user.Email,
+			NoTelp:      user.NoTelp,
+			Role:        user.Role,
+			Is_Verified: user.IsVerified,
+		})
+	}
+
+	return result, nil
 }
