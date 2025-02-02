@@ -8,7 +8,7 @@ import (
 
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/constant"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/dto"
-	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/models"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/entity"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/repository"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -50,7 +50,7 @@ func (s *userService) RegisterUser(ctx context.Context, req dto.RegisterUserRequ
 		return dto.RegisterUserResponse{}, dto.ErrHashPass
 	}
 
-	user := models.User{
+	user := entity.User{
 		Name:       req.Name,
 		Email:      req.Email,
 		Password:   string(hash),
@@ -73,7 +73,7 @@ func (s *userService) RegisterUser(ctx context.Context, req dto.RegisterUserRequ
 }
 
 func (s *userService) Verify(ctx context.Context, req dto.UserLoginRequest) (dto.UserLoginResponse, error) {
-	var user models.User
+	var user entity.User
 
 	// Step 1: Check if email exists in the database
 	user, exists, err := s.userRepo.CheckEmail(ctx, nil, req.Email)
