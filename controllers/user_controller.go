@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/dto"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/entity"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/initializers"
-	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/models"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/service"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/gin-gonic/gin"
@@ -94,7 +94,7 @@ func (c *userController) GetAllUser(ctx *gin.Context) {
 
 func GetAllUsers(ctx *gin.Context) {
 	var users dto.GetAllUser
-	//var users []models.User
+	//var users []entity.User
 
 	if err := initializers.DB.Find(&users).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -122,7 +122,7 @@ func GetUserByID(ctx *gin.Context) {
 		return
 	}
 
-	var user models.User
+	var user entity.User
 	result := initializers.DB.First(&user, "id = ?", parsedID)
 
 	if result.Error != nil {
@@ -165,7 +165,7 @@ func UpdateUser(ctx *gin.Context) {
 	}
 
 	authUser, _ := ctx.Get("user")
-	authUserData := authUser.(models.User)
+	authUserData := authUser.(entity.User)
 
 	if idParam != authUserData.ID.String() {
 		ctx.JSON(http.StatusForbidden, gin.H{
@@ -188,7 +188,7 @@ func UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	var user models.User
+	var user entity.User
 	result := initializers.DB.First(&user, "id = ?", idParam)
 
 	if result.Error != nil {
@@ -240,7 +240,7 @@ func DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	var user models.User
+	var user entity.User
 	result := initializers.DB.First(&user, "id = ?", idParam)
 
 	if result.Error != nil {
@@ -295,7 +295,7 @@ func ValidateUser(ctx *gin.Context) {
 		return
 	}
 
-	var user models.User
+	var user entity.User
 	result := initializers.DB.First(&user, "id = ?", idParam)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {

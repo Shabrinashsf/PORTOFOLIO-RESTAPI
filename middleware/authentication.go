@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/dto"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/entity"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/initializers"
-	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/models"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -66,7 +66,7 @@ func Authenticate() gin.HandlerFunc {
 			userRole := claims["role"].(string)
 
 			// look for user in db
-			var user models.User
+			var user entity.User
 			initializers.DB.First(&user, userID)
 			if user.ID == uuid.Nil {
 				response := utils.BuildResponseFailed(dto.MESSAGE_FAILED_TO_PROSES_REQUEST, dto.ErrUserIdEmpty.Error(), nil)
