@@ -10,11 +10,16 @@ const (
 	MESSAGE_FAILED_TOKEN_NOT_VALID    = "failed invalid token"
 	MESSAGE_FAILED_ACCESS_DENIED      = "failed access for non admin"
 	MESSAGE_FAILED_USER_NOT_FOUND     = "failed access user not found"
+	MESSAGE_FAILED_DECODE_PUBLIC_KEY  = "failed to decode public key"
+	MESSAGE_INVALID_PUBLIC_KEY_FORMAT = "Invalid public key format"
 )
 
 var (
-	ErrUserIdEmpty   = errors.New("empty user ID")
-	ErrTokenExpired  = errors.New("token expired")
-	ErrParsingToken  = errors.New("failed parsing token")
-	ErrInvalidUserId = errors.New("invalid user id in token")
+	ErrUserIdEmpty             = errors.New("empty user ID")
+	ErrTokenExpired            = errors.New("token expired")
+	ErrParsingToken            = errors.New("failed parsing token")
+	ErrInvalidUserId           = errors.New("invalid user id in token")
+	ErrInvalidRole             = errors.New("invalid role")
+	ErrFailedDecodePrivateKey  = errors.New("failed to decode private key")
+	ErrInvalidPrivateKeyFormat = errors.New("invalid private key format")
 )

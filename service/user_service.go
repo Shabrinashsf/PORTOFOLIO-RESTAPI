@@ -9,11 +9,11 @@ import (
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/constant"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/dto"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/entity"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/middleware"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/repository"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/thanhpk/randstr"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type (
@@ -138,19 +138,30 @@ func (s *userService) Verify(ctx context.Context, req dto.UserLoginRequest) (dto
 	}
 
 	// Step 3: Validate the password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+	if err := utils.VerifyPassword(user.Password, req.Password); err != nil {
 		return dto.UserLoginResponse{}, dto.ErrInvalidCredentials
 	}
 
 	// Step 4: Generate a JWT token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	privateKeyBytes, err := middleware.DecodePrivateKeyBase64()
+	if err != nil {
+		return dto.UserLoginResponse{}, dto.ErrFailedDecodePrivateKey
+	}
+
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
+	if err != nil {
+		return dto.UserLoginResponse{}, dto.ErrInvalidPrivateKeyFormat
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"user": user.ID.String(),
 		"role": user.Role,
-		"exp":  time.Now().Add(time.Hour * 24).Unix(),
+		"exp":  time.Now().Add(15 * time.Minute).Unix(),
+		"iat":  time.Now().Unix(),
 	})
 
 	// Step 5: Sign the token with the secret key
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
 		return dto.UserLoginResponse{}, dto.ErrFailedCreateToken
 	}

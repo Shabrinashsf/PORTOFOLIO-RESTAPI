@@ -82,7 +82,6 @@ func (c *userController) Login(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_LOGIN, response)
-	// ctx.SetCookie("Authorization", response.Token, 3600*24, "", "", false, true)
 	ctx.JSON(http.StatusOK, res)
 }
 
