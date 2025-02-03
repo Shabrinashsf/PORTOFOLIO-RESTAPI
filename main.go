@@ -10,6 +10,7 @@ import (
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/repository"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/routes"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/service"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +20,8 @@ func init() {
 }
 
 func main() {
+	utils.LoadTemplates("template")
+
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {
 		if err := migrations.Migrate(); err != nil {
 			log.Fatalf("Migration failed: %v", err)

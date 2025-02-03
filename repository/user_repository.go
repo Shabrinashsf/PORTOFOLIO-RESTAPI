@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/entity"
 	"gorm.io/gorm"
@@ -12,6 +13,8 @@ type (
 		CheckEmail(ctx context.Context, tx *gorm.DB, email string) (entity.User, bool, error)
 		RegisterUser(ctx context.Context, tx *gorm.DB, user entity.User) (entity.User, error)
 		GetAllUser(ctx context.Context) ([]entity.User, error)
+		VerifyEmail(code string) (entity.User, error)
+		UpdateIsVerified(user entity.User) error
 	}
 
 	userRepository struct {
@@ -26,15 +29,17 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 }
 
 func (r *userRepository) CheckEmail(ctx context.Context, tx *gorm.DB, email string) (entity.User, bool, error) {
+	var user entity.User
 	if tx == nil {
 		tx = r.db
 	}
 
-	var user entity.User
 	if err := tx.WithContext(ctx).Where("email = ?", email).Take(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.User{}, false, nil // Email belum ada, tidak dianggap error
+		}
 		return entity.User{}, false, err
 	}
-
 	return user, true, nil
 }
 
@@ -56,4 +61,17 @@ func (r *userRepository) GetAllUser(ctx context.Context) ([]entity.User, error) 
 		return nil, err
 	}
 	return users, nil
+}
+
+func (r *userRepository) VerifyEmail(code string) (entity.User, error) {
+	var user entity.User
+	result := r.db.First(&user, "verification_code  = ?", code)
+	if result.Error != nil {
+		return entity.User{}, result.Error
+	}
+	return user, nil
+}
+
+func (r *userRepository) UpdateIsVerified(user entity.User) error {
+	return r.db.Save(&user).Error
 }

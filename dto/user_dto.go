@@ -4,25 +4,30 @@ import "errors"
 
 const (
 	// SUCCESS
-	MESSAGE_SUCCESS_REGISTER_USER = "success add user"
-	MESSAGE_SUCCESS_LOGIN         = "success login user"
-	MESSAGE_SUCCESS_FETCH_USERS   = "success to fetch users"
+	MESSAGE_SUCCESS_REGISTER_USER     = "success add user"
+	MESSAGE_SUCCESS_LOGIN             = "success login user"
+	MESSAGE_SUCCESS_FETCH_USERS       = "success to fetch users"
+	MESSAGE_SUCCESS_VERIFY_EMAIL_USER = "success to verify user email verification"
 
 	// FAILED
-	MESSAGE_FAILED_REGISTER_USER = "failed add user"
-	MESSAGE_FAILED_LOGIN         = "failed login user"
-	MESSAGE_FAILED_FETCH_USERS   = "failed to fetch users"
+	MESSAGE_FAILED_REGISTER_USER     = "failed add user"
+	MESSAGE_FAILED_LOGIN             = "failed login user"
+	MESSAGE_FAILED_FETCH_USERS       = "failed to fetch users"
+	MESSAGE_FAILED_VERIFY_EMAIL_USER = "failed to verify user email verification"
 )
 
 var (
-	ErrHashPass           = errors.New("failed to hash password")
-	ErrEmailAlreadyExists = errors.New("email already exists")
-	ErrCreateUser         = errors.New("failed to create user")
-	ErrInvalidCredentials = errors.New("invalid crecentials")
-	ErrAccountNotVerified = errors.New("account not verified")
-	ErrFailedCreateToken  = errors.New("failed to create token")
-	ErrInternalServer     = errors.New("internal server error")
-	ErrFailedGetUsers     = errors.New("failed to get users")
+	ErrHashPass                = errors.New("failed to hash password")
+	ErrEmailAlreadyExists      = errors.New("email already exists")
+	ErrCreateUser              = errors.New("failed to create user")
+	ErrInvalidCredentials      = errors.New("invalid crecentials")
+	ErrAccountNotVerified      = errors.New("account not verified")
+	ErrFailedCreateToken       = errors.New("failed to create token")
+	ErrInternalServer          = errors.New("internal server error")
+	ErrFailedGetUsers          = errors.New("failed to get users")
+	ErrInvalidVerificationCode = errors.New("invalid verification code or user doesn't exists")
+	ErrUserAlreadyVerified     = errors.New("user already verified")
+	ErrUpdateIsVerified        = errors.New("failed to update user is_verified status")
 )
 
 type (
@@ -51,10 +56,15 @@ type (
 	}
 
 	GetAllUser struct {
-		Name        string `json:"name" form:"name"`
-		Email       string `json:"email" form:"email"`
-		NoTelp      string `json:"no_telp" form:"no_telp"`
-		Role        string `json:"role" form:"role"`
-		Is_Verified bool   `json:"is_verified" form:"is_verified"`
+		Name       string `json:"name" form:"name"`
+		Email      string `json:"email" form:"email"`
+		NoTelp     string `json:"no_telp" form:"no_telp"`
+		Role       string `json:"role" form:"role"`
+		IsVerified bool   `json:"is_verified" form:"is_verified"`
+	}
+
+	VerifyEmail struct {
+		Email      string `json:"email" form:"email"`
+		IsVerified bool   `json:"is_verified" form:"is_verified"`
 	}
 )

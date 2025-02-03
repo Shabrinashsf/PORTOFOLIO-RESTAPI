@@ -14,6 +14,7 @@ func User(r *gin.Engine, userController controllers.UserController) {
 		routes.POST("/login", userController.Login)
 		routes.GET("/me", middleware.Authenticate(), controllers.AboutMe)
 		routes.PUT("/user/:id", middleware.Authenticate(), controllers.UpdateUser)
+		routes.GET("/verifyemail/:verificationCode", userController.VerifyEmail)
 
 		// Admin
 		routes.GET("/user", middleware.Authenticate(), middleware.AdminOnly(), controllers.GetAllUsers)

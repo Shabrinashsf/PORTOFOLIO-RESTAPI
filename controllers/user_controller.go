@@ -18,6 +18,7 @@ type (
 		RegisterUser(ctx *gin.Context)
 		Login(ctx *gin.Context)
 		GetAllUser(ctx *gin.Context)
+		VerifyEmail(ctx *gin.Context)
 	}
 
 	userController struct {
@@ -48,6 +49,19 @@ func (c *userController) RegisterUser(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_REGISTER_USER, response)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *userController) VerifyEmail(ctx *gin.Context) {
+	code := ctx.Params.ByName("verificationCode")
+	result, err := c.userService.VerifyEmail(ctx, code)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_VERIFY_EMAIL_USER, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_VERIFY_EMAIL_USER, result)
 	ctx.JSON(http.StatusOK, res)
 }
 

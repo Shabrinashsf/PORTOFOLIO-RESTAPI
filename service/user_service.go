@@ -10,7 +10,9 @@ import (
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/dto"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/entity"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/repository"
+	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/thanhpk/randstr"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,6 +21,7 @@ type (
 		RegisterUser(ctx context.Context, req dto.RegisterUserRequest) (dto.RegisterUserResponse, error)
 		Verify(ctx context.Context, req dto.UserLoginRequest) (dto.UserLoginResponse, error)
 		GetAllUser(ctx context.Context) ([]dto.GetAllUser, error)
+		VerifyEmail(ctx context.Context, code string) (dto.VerifyEmail, error)
 	}
 
 	userService struct {
@@ -45,18 +48,26 @@ func (s *userService) RegisterUser(ctx context.Context, req dto.RegisterUserRequ
 		return dto.RegisterUserResponse{}, dto.ErrEmailAlreadyExists
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
+	hash, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return dto.RegisterUserResponse{}, dto.ErrHashPass
 	}
 
+	// generate verification code
+	code := randstr.String(20)
+	verification_code := utils.Encode(code)
+
+	now := time.Now()
 	user := entity.User{
-		Name:       req.Name,
-		Email:      req.Email,
-		Password:   string(hash),
-		NoTelp:     req.NoTelp,
-		Role:       constant.ROLE_USER,
-		IsVerified: false,
+		Name:             req.Name,
+		Email:            req.Email,
+		Password:         hash,
+		NoTelp:           req.NoTelp,
+		Role:             constant.ROLE_USER,
+		IsVerified:       false,
+		VerificationCode: verification_code,
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 
 	userReg, err := s.userRepo.RegisterUser(ctx, nil, user)
@@ -64,11 +75,48 @@ func (s *userService) RegisterUser(ctx context.Context, req dto.RegisterUserRequ
 		return dto.RegisterUserResponse{}, dto.ErrCreateUser
 	}
 
+	// send email
+	ClientOrigin := os.Getenv("CLIENT_ORIGIN")
+	name := user.Name
+
+	emailData := utils.EmailData{
+		URL:     ClientOrigin + "/verifyemail/" + code,
+		Name:    name,
+		Subject: "Your Account Verification Code To SHSF Server",
+	}
+
+	go utils.SendEmail(&userReg, &emailData)
+
 	return dto.RegisterUserResponse{
 		Name:   userReg.Name,
 		Email:  userReg.Email,
 		NoTelp: userReg.NoTelp,
 		Role:   userReg.Role,
+	}, nil
+}
+
+func (s *userService) VerifyEmail(ctx context.Context, code string) (dto.VerifyEmail, error) {
+	verification_code := utils.Encode(code)
+
+	user, err := s.userRepo.VerifyEmail(verification_code)
+	if err != nil {
+		return dto.VerifyEmail{}, dto.ErrInvalidVerificationCode
+	}
+
+	if user.IsVerified {
+		return dto.VerifyEmail{}, dto.ErrUserAlreadyVerified
+	}
+
+	user.VerificationCode = ""
+	user.IsVerified = true
+
+	if err := s.userRepo.UpdateIsVerified(user); err != nil {
+		return dto.VerifyEmail{}, dto.ErrUpdateIsVerified
+	}
+
+	return dto.VerifyEmail{
+		Email:      user.Email,
+		IsVerified: user.IsVerified,
 	}, nil
 }
 
@@ -123,11 +171,11 @@ func (s *userService) GetAllUser(ctx context.Context) ([]dto.GetAllUser, error) 
 	var result []dto.GetAllUser
 	for _, user := range users {
 		result = append(result, dto.GetAllUser{
-			Name:        user.Name,
-			Email:       user.Email,
-			NoTelp:      user.NoTelp,
-			Role:        user.Role,
-			Is_Verified: user.IsVerified,
+			Name:       user.Name,
+			Email:      user.Email,
+			NoTelp:     user.NoTelp,
+			Role:       user.Role,
+			IsVerified: user.IsVerified,
 		})
 	}
 
