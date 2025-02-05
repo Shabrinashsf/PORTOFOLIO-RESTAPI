@@ -19,6 +19,7 @@ type (
 		Login(ctx *gin.Context)
 		GetAllUser(ctx *gin.Context)
 		VerifyEmail(ctx *gin.Context)
+		GetUserByID(ctx *gin.Context)
 	}
 
 	userController struct {
@@ -105,64 +106,17 @@ func (c *userController) GetAllUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func GetAllUsers(ctx *gin.Context) {
-	var users dto.GetAllUser
-	//var users []entity.User
-
-	if err := initializers.DB.Find(&users).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  false,
-			"message": "Failed to fetch users"})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "Success to fetch users",
-		"users":   users,
-	})
-}
-
-func GetUserByID(ctx *gin.Context) {
+func (c *userController) GetUserByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	parsedID, err := uuid.Parse(id)
+	user, err := c.userService.GetUserByID(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Invalid UUID format",
-		})
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_FIND_USER, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-
-	var user entity.User
-	result := initializers.DB.First(&user, "id = ?", parsedID)
-
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			ctx.JSON(http.StatusNotFound, gin.H{
-				"status":  false,
-				"message": "User not found",
-			})
-		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status":  false,
-				"message": "Failed to fetch user",
-			})
-		}
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "Success to fetch user",
-		"user": gin.H{
-			"id":    user.ID,
-			"name":  user.Name,
-			"email": user.Email,
-			"role":  user.Role,
-		},
-	})
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_FIND_USER, user)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func UpdateUser(ctx *gin.Context) {
@@ -282,66 +236,5 @@ func DeleteUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "User successfully deleted",
-	})
-}
-
-func ValidateUser(ctx *gin.Context) {
-	idParam := ctx.Param("id")
-
-	_, err := uuid.Parse(idParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Invalid UUID format for user ID",
-		})
-		return
-	}
-
-	var requestBody struct {
-		IsVerified bool `json:"is_verified"`
-	}
-	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Invalid request body",
-		})
-		return
-	}
-
-	var user entity.User
-	result := initializers.DB.First(&user, "id = ?", idParam)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			ctx.JSON(http.StatusNotFound, gin.H{
-				"status":  false,
-				"message": "User not found",
-			})
-		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status":  false,
-				"message": "Failed to fetch user",
-			})
-		}
-		return
-	}
-
-	user.IsVerified = requestBody.IsVerified
-
-	if err := initializers.DB.Save(&user).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  false,
-			"message": "Failed to update user validation status",
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "User validation status updated successfully",
-		"user": gin.H{
-			"id":          user.ID,
-			"name":        user.Name,
-			"is_verified": user.IsVerified,
-		},
 	})
 }

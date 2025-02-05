@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/entity"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -15,6 +16,7 @@ type (
 		GetAllUser(ctx context.Context) ([]entity.User, error)
 		VerifyEmail(code string) (entity.User, error)
 		UpdateIsVerified(user entity.User) error
+		GetUserByID(parsedID uuid.UUID) (entity.User, error)
 	}
 
 	userRepository struct {
@@ -74,4 +76,15 @@ func (r *userRepository) VerifyEmail(code string) (entity.User, error) {
 
 func (r *userRepository) UpdateIsVerified(user entity.User) error {
 	return r.db.Save(&user).Error
+}
+
+func (r *userRepository) GetUserByID(parsedID uuid.UUID) (entity.User, error) {
+	var user entity.User
+	result := r.db.First(&user, "id = ?", parsedID)
+
+	if result.Error != nil {
+		return entity.User{}, result.Error
+	}
+
+	return user, nil
 }

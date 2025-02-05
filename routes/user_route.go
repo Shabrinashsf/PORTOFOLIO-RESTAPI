@@ -17,9 +17,8 @@ func User(r *gin.Engine, userController controllers.UserController) {
 		routes.GET("/verifyemail/:verificationCode", userController.VerifyEmail)
 
 		// Admin
-		routes.GET("/user", middleware.Authenticate(), middleware.AdminOnly(), controllers.GetAllUsers)
-		routes.GET("/user/:id", middleware.Authenticate(), middleware.AdminOnly(), controllers.GetUserByID)
+		routes.GET("/user", middleware.Authenticate(), middleware.AdminOnly(), userController.GetAllUser)
+		routes.GET("/user/:id", middleware.Authenticate(), middleware.AdminOnly(), userController.GetUserByID)
 		routes.DELETE("/user/:id", middleware.Authenticate(), middleware.AdminOnly(), controllers.DeleteUser)
-		routes.PUT("/user/validate/:id", middleware.Authenticate(), middleware.AdminOnly(), controllers.ValidateUser)
 	}
 }

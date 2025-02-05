@@ -13,6 +13,7 @@ import (
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/repository"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/thanhpk/randstr"
 )
 
@@ -22,6 +23,7 @@ type (
 		Verify(ctx context.Context, req dto.UserLoginRequest) (dto.UserLoginResponse, error)
 		GetAllUser(ctx context.Context) ([]dto.GetAllUser, error)
 		VerifyEmail(ctx context.Context, code string) (dto.VerifyEmail, error)
+		GetUserByID(ctx context.Context, id string) (dto.GetUserByID, error)
 	}
 
 	userService struct {
@@ -191,4 +193,24 @@ func (s *userService) GetAllUser(ctx context.Context) ([]dto.GetAllUser, error) 
 	}
 
 	return result, nil
+}
+
+func (s *userService) GetUserByID(ctx context.Context, id string) (dto.GetUserByID, error) {
+	parsedID, err := uuid.Parse(id)
+	if err != nil {
+		return dto.GetUserByID{}, dto.ErrInvalidUUID
+	}
+
+	user, err := s.userRepo.GetUserByID(parsedID)
+	if err != nil {
+		return dto.GetUserByID{}, dto.ErrFailedFindUser
+	}
+
+	return dto.GetUserByID{
+		Name:       user.Name,
+		Email:      user.Email,
+		NoTelp:     user.NoTelp,
+		Role:       user.Role,
+		IsVerified: user.IsVerified,
+	}, nil
 }
