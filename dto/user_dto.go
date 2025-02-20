@@ -9,6 +9,7 @@ const (
 	MESSAGE_SUCCESS_FETCH_USERS       = "success to fetch users"
 	MESSAGE_SUCCESS_VERIFY_EMAIL_USER = "success to verify user email verification"
 	MESSAGE_SUCCESS_FIND_USER         = "success find user"
+	MESSAGE_SUCCESS_UPDATE_USER       = "success to update user"
 
 	// FAILED
 	MESSAGE_FAILED_REGISTER_USER     = "failed add user"
@@ -16,6 +17,7 @@ const (
 	MESSAGE_FAILED_FETCH_USERS       = "failed to fetch users"
 	MESSAGE_FAILED_VERIFY_EMAIL_USER = "failed to verify user email verification"
 	MESSAGE_FAILED_FIND_USER         = "failed find user"
+	MESSAGE_FAILED_UPDATE_USER       = "failed to update user"
 )
 
 var (
@@ -32,6 +34,8 @@ var (
 	ErrUpdateIsVerified        = errors.New("failed to update user is_verified status")
 	ErrInvalidUUID             = errors.New("invalid UUID format")
 	ErrFailedFindUser          = errors.New("failed find user in database")
+	ErrUnauthorized            = errors.New("unauthorized user, only admin")
+	ErrFailedUpdateUser        = errors.New("failed to update user")
 )
 
 type (
@@ -78,5 +82,10 @@ type (
 		NoTelp     string `json:"no_telp" form:"no_telp"`
 		Role       string `json:"role" form:"role"`
 		IsVerified bool   `json:"is_verified" form:"is_verified"`
+	}
+
+	UpdateUser struct {
+		Name   string `json:"name" form:"name"`
+		NoTelp string `json:"no_telp" form:"no_telp"`
 	}
 )

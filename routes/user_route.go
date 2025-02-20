@@ -13,7 +13,7 @@ func User(r *gin.Engine, userController controllers.UserController) {
 		routes.POST("/register", userController.RegisterUser)
 		routes.POST("/login", userController.Login)
 		routes.GET("/me", middleware.Authenticate(), controllers.AboutMe)
-		routes.PUT("/user/:id", middleware.Authenticate(), controllers.UpdateUser)
+		routes.PUT("/user/:id", middleware.Authenticate(), userController.UpdateUser)
 		routes.GET("/verifyemail/:verificationCode", userController.VerifyEmail)
 
 		// Admin

@@ -17,6 +17,7 @@ type (
 		VerifyEmail(code string) (entity.User, error)
 		UpdateIsVerified(user entity.User) error
 		GetUserByID(parsedID uuid.UUID) (entity.User, error)
+		UpdateUser(tx *gorm.DB, user entity.User) (entity.User, error)
 	}
 
 	userRepository struct {
@@ -84,6 +85,18 @@ func (r *userRepository) GetUserByID(parsedID uuid.UUID) (entity.User, error) {
 
 	if result.Error != nil {
 		return entity.User{}, result.Error
+	}
+
+	return user, nil
+}
+
+func (r *userRepository) UpdateUser(tx *gorm.DB, user entity.User) (entity.User, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.Model(&user).Where("id = ?", user.ID).Updates(user).Error; err != nil {
+		return entity.User{}, err
 	}
 
 	return user, nil

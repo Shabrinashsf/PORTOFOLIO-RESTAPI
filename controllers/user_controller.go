@@ -20,6 +20,7 @@ type (
 		GetAllUser(ctx *gin.Context)
 		VerifyEmail(ctx *gin.Context)
 		GetUserByID(ctx *gin.Context)
+		UpdateUser(ctx *gin.Context)
 	}
 
 	userController struct {
@@ -119,80 +120,30 @@ func (c *userController) GetUserByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func UpdateUser(ctx *gin.Context) {
+func (c *userController) UpdateUser(ctx *gin.Context) {
 	idParam := ctx.Param("id")
+	if idParam == "" {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, "ID is required", nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
 
-	_, err := uuid.Parse(idParam)
+	var body dto.UpdateUser
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	response, err := c.userService.UpdateUser(ctx, idParam, body)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Invalid UUID format for user ID",
-		})
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_USER, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	authUser, _ := ctx.Get("user")
-	authUserData := authUser.(entity.User)
-
-	if idParam != authUserData.ID.String() {
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"status":  false,
-			"message": "You are not authorized to update this user",
-		})
-		return
-	}
-
-	var userInput struct {
-		Name   string `json:"name"`
-		NoTelp string `json:"no_telp"`
-	}
-
-	if err := ctx.ShouldBindJSON(&userInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Invalid input data",
-		})
-		return
-	}
-
-	var user entity.User
-	result := initializers.DB.First(&user, "id = ?", idParam)
-
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			ctx.JSON(http.StatusNotFound, gin.H{
-				"status":  false,
-				"message": "User not found",
-			})
-		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status":  false,
-				"message": "Failed to fetch user",
-			})
-		}
-		return
-	}
-
-	user.Name = userInput.Name
-	user.NoTelp = userInput.NoTelp
-
-	if err := initializers.DB.Save(&user).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  false,
-			"message": "Failed to update user",
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "User successfully updated",
-		"user": gin.H{
-			"id":      user.ID,
-			"name":    user.Name,
-			"no_telp": user.NoTelp,
-		},
-	})
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_USER, response)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func DeleteUser(ctx *gin.Context) {

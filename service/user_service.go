@@ -12,6 +12,7 @@ import (
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/middleware"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/repository"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/thanhpk/randstr"
@@ -24,6 +25,7 @@ type (
 		GetAllUser(ctx context.Context) ([]dto.GetAllUser, error)
 		VerifyEmail(ctx context.Context, code string) (dto.VerifyEmail, error)
 		GetUserByID(ctx context.Context, id string) (dto.GetUserByID, error)
+		UpdateUser(ctx *gin.Context, idParam string, req dto.UpdateUser) (dto.UpdateUser, error)
 	}
 
 	userService struct {
@@ -212,5 +214,41 @@ func (s *userService) GetUserByID(ctx context.Context, id string) (dto.GetUserBy
 		NoTelp:     user.NoTelp,
 		Role:       user.Role,
 		IsVerified: user.IsVerified,
+	}, nil
+}
+
+func (s *userService) UpdateUser(ctx *gin.Context, idParam string, req dto.UpdateUser) (dto.UpdateUser, error) {
+	parsedID, err := uuid.Parse(idParam)
+	if err != nil {
+		return dto.UpdateUser{}, dto.ErrInvalidUUID
+	}
+
+	authUser, _ := ctx.Get("user")
+	authUserData := authUser.(entity.User)
+
+	if idParam != authUserData.ID.String() {
+		return dto.UpdateUser{}, dto.ErrUnauthorized
+	}
+
+	existingUser, err := s.userRepo.GetUserByID(parsedID)
+	if err != nil {
+		return dto.UpdateUser{}, dto.ErrFailedFindUser
+	}
+
+	if req.Name != "" {
+		existingUser.Name = req.Name
+	}
+	if req.NoTelp != "" {
+		existingUser.NoTelp = req.NoTelp
+	}
+
+	result, err := s.userRepo.UpdateUser(nil, existingUser)
+	if err != nil {
+		return dto.UpdateUser{}, dto.ErrFailedUpdateUser
+	}
+
+	return dto.UpdateUser{
+		Name:   result.Name,
+		NoTelp: result.NoTelp,
 	}, nil
 }
