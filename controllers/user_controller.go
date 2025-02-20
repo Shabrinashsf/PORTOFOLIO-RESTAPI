@@ -5,12 +5,9 @@ import (
 
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/dto"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/entity"
-	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/initializers"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/service"
 	"github.com/Shabrinashsf/PORTOFOLIO-RESTAPI/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type (
@@ -21,6 +18,7 @@ type (
 		VerifyEmail(ctx *gin.Context)
 		GetUserByID(ctx *gin.Context)
 		UpdateUser(ctx *gin.Context)
+		DeleteUser(ctx *gin.Context)
 	}
 
 	userController struct {
@@ -146,46 +144,22 @@ func (c *userController) UpdateUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func DeleteUser(ctx *gin.Context) {
+func (c *userController) DeleteUser(ctx *gin.Context) {
 	idParam := ctx.Param("id")
-
-	_, err := uuid.Parse(idParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Invalid UUID format for user ID",
-		})
+	if idParam == "" {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, "ID is required", nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
 
 	var user entity.User
-	result := initializers.DB.First(&user, "id = ?", idParam)
-
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			ctx.JSON(http.StatusNotFound, gin.H{
-				"status":  false,
-				"message": "User not found",
-			})
-		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status":  false,
-				"message": "Failed to fetch user",
-			})
-		}
+	response, err := c.userService.DeleteUser(idParam, user)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_DELETE_USER, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	if err := initializers.DB.Delete(&user).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  false,
-			"message": "Failed to delete user",
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "User successfully deleted",
-	})
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_DELETE_USER, response)
+	ctx.JSON(http.StatusOK, res)
 }

@@ -10,6 +10,7 @@ const (
 	MESSAGE_SUCCESS_VERIFY_EMAIL_USER = "success to verify user email verification"
 	MESSAGE_SUCCESS_FIND_USER         = "success find user"
 	MESSAGE_SUCCESS_UPDATE_USER       = "success to update user"
+	MESSAGE_SUCCESS_DELETE_USER       = "success to delete user"
 
 	// FAILED
 	MESSAGE_FAILED_REGISTER_USER     = "failed add user"
@@ -18,6 +19,7 @@ const (
 	MESSAGE_FAILED_VERIFY_EMAIL_USER = "failed to verify user email verification"
 	MESSAGE_FAILED_FIND_USER         = "failed find user"
 	MESSAGE_FAILED_UPDATE_USER       = "failed to update user"
+	MESSAGE_FAILED_DELETE_USER       = "failed to delete user"
 )
 
 var (
@@ -36,6 +38,7 @@ var (
 	ErrFailedFindUser          = errors.New("failed find user in database")
 	ErrUnauthorized            = errors.New("unauthorized user, only admin")
 	ErrFailedUpdateUser        = errors.New("failed to update user")
+	ErrFailedDeleteUser        = errors.New("failed to delete user")
 )
 
 type (

@@ -18,6 +18,7 @@ type (
 		UpdateIsVerified(user entity.User) error
 		GetUserByID(parsedID uuid.UUID) (entity.User, error)
 		UpdateUser(tx *gorm.DB, user entity.User) (entity.User, error)
+		DeleteUser(tx *gorm.DB, user entity.User) error
 	}
 
 	userRepository struct {
@@ -100,4 +101,15 @@ func (r *userRepository) UpdateUser(tx *gorm.DB, user entity.User) (entity.User,
 	}
 
 	return user, nil
+}
+
+func (r *userRepository) DeleteUser(tx *gorm.DB, user entity.User) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.Delete(&user).Error; err != nil {
+		return err
+	}
+	return nil
 }

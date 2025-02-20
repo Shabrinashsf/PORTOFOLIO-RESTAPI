@@ -19,6 +19,6 @@ func User(r *gin.Engine, userController controllers.UserController) {
 		// Admin
 		routes.GET("/user", middleware.Authenticate(), middleware.AdminOnly(), userController.GetAllUser)
 		routes.GET("/user/:id", middleware.Authenticate(), middleware.AdminOnly(), userController.GetUserByID)
-		routes.DELETE("/user/:id", middleware.Authenticate(), middleware.AdminOnly(), controllers.DeleteUser)
+		routes.DELETE("/user/:id", middleware.Authenticate(), middleware.AdminOnly(), userController.DeleteUser)
 	}
 }

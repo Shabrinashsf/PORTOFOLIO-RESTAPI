@@ -26,6 +26,7 @@ type (
 		VerifyEmail(ctx context.Context, code string) (dto.VerifyEmail, error)
 		GetUserByID(ctx context.Context, id string) (dto.GetUserByID, error)
 		UpdateUser(ctx *gin.Context, idParam string, req dto.UpdateUser) (dto.UpdateUser, error)
+		DeleteUser(idParam string, user entity.User) (entity.User, error)
 	}
 
 	userService struct {
@@ -251,4 +252,23 @@ func (s *userService) UpdateUser(ctx *gin.Context, idParam string, req dto.Updat
 		Name:   result.Name,
 		NoTelp: result.NoTelp,
 	}, nil
+}
+
+func (s *userService) DeleteUser(idParam string, user entity.User) (entity.User, error) {
+	parsedID, err := uuid.Parse(idParam)
+	if err != nil {
+		return entity.User{}, dto.ErrInvalidUUID
+	}
+
+	existingUser, err := s.userRepo.GetUserByID(parsedID)
+	if err != nil {
+		return entity.User{}, dto.ErrFailedFindUser
+	}
+
+	err = s.userRepo.DeleteUser(nil, existingUser)
+	if err != nil {
+		return entity.User{}, dto.ErrFailedDeleteUser
+	}
+
+	return existingUser, nil
 }
