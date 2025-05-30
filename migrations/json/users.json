@@ -1,0 +1,22 @@
+[
+  {
+    "id":"3f9cf24c-94a8-476f-9513-53692476af46",
+    "name": "Shabrina Amalia Safaana",
+    "email": "shab1234@gmail.com",
+    "password": "shabaja",
+    "no_telp": "08123456789",
+    "role": "user",
+    "is_verified": true,
+    "verification_code": ""
+  },
+  {
+    "id": "32edc279-77ae-4444-8812-9a773d51d629",
+    "name": "Mark Lan",
+    "email": "lanlanlan@gmail.com",
+    "password": "kukujijilala",
+    "no_telp": "081234567899",
+    "role": "user",
+    "is_verified": true,
+    "verification_code": ""
+  }
+]

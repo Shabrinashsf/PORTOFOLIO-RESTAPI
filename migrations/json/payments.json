@@ -1,0 +1,18 @@
+[
+    {
+		"id": "4bc72309-b641-4efd-b0f7-50c8d74f0cb1",
+		"user_id": "3f9cf24c-94a8-476f-9513-53692476af46",
+		"payment_status": "PAID",
+		"type": "SHSF Reguler",
+		"invoice_url": "",
+		"paid_amount": 10000
+	},
+	{
+		"id": "0ff55bef-018e-48c2-bdab-02a611f6dd53",
+		"user_id": "32edc279-77ae-4444-8812-9a773d51d629",
+		"payment_status": "PAID",
+		"type": "SHSF Advanced",
+		"invoice_url": "",
+		"paid_amount": 30000
+	}
+]

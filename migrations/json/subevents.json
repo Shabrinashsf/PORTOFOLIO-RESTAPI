@@ -1,0 +1,18 @@
+[
+    {
+    "id": "650108de-36c3-47aa-9cd3-cb2d5b497704",
+    "event_id": "3e035538-aba7-4e81-bbd0-1ace9309ae6e",
+    "name": "SHSF Advanced",
+    "starts_at": "2025-04-01T10:00:00Z",
+    "ends_at": "2025-04-01T12:00:00Z",
+    "price": 30000
+  },
+  {
+    "id": "650108de-36c3-47aa-9cd3-cb2d5b497705",
+    "event_id": "3e035538-aba7-4e81-bbd0-1ace9309ae6e",
+    "name": "SHSF Reguler",
+    "starts_at": "2025-04-02T14:00:00Z",
+    "ends_at": "2025-04-02T16:00:00Z",
+    "price": 10000
+  }
+]

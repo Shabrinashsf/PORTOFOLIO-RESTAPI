@@ -22,4 +22,7 @@ var (
 	ErrInvalidRole             = errors.New("invalid role")
 	ErrFailedDecodePrivateKey  = errors.New("failed to decode private key")
 	ErrInvalidPrivateKeyFormat = errors.New("invalid private key format")
+	ErrUserNotFound            = errors.New("user not found")
+	ErrGeneral                 = errors.New("something went wrong")
+	ErrGetUserById             = errors.New("failed get user by id")
 )

@@ -16,6 +16,11 @@ func Migrate() error {
 	initializers.DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
 	if err := initializers.DB.AutoMigrate(
 		&entity.User{},
+		&entity.SHSF{},
+		&entity.Event{},
+		&entity.Subevent{},
+		&entity.EventPayment{},
+		&entity.Payment{},
 	); err != nil {
 		log.Printf("Failed to migrate: %v", err)
 		return err

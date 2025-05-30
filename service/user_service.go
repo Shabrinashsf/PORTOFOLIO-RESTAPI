@@ -62,7 +62,6 @@ func (s *userService) RegisterUser(ctx context.Context, req dto.RegisterUserRequ
 	code := randstr.String(20)
 	verification_code := utils.Encode(code)
 
-	now := time.Now()
 	user := entity.User{
 		Name:             req.Name,
 		Email:            req.Email,
@@ -71,8 +70,6 @@ func (s *userService) RegisterUser(ctx context.Context, req dto.RegisterUserRequ
 		Role:             constant.ROLE_USER,
 		IsVerified:       false,
 		VerificationCode: verification_code,
-		CreatedAt:        now,
-		UpdatedAt:        now,
 	}
 
 	userReg, err := s.userRepo.RegisterUser(ctx, nil, user)
