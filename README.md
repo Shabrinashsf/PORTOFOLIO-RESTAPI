@@ -28,6 +28,7 @@ The program flow goes through the layers below :
 `request` > router > controller > service > repository > service > controller > router > `response`
 
 ## Database schema
+<img width="1027" height="675" alt="image" src="https://github.com/user-attachments/assets/bbf0fa20-ab1c-4a66-bf72-de486ceca50c" />
 
 
 ## Prerequisite 
