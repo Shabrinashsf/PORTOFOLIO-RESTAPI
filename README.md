@@ -31,6 +31,10 @@ The program flow goes through the layers below :
 <img width="1027" height="675" alt="image" src="https://github.com/user-attachments/assets/bbf0fa20-ab1c-4a66-bf72-de486ceca50c" />
 
 
+## Flowchart 
+![Mind Map](https://github.com/user-attachments/assets/bcae988d-f11a-44f0-87e9-336646103b72)
+
+
 ## Prerequisite 
 - Go Version `>= go 1.20`
 - PostgreSQL Version `>= version 15.0`
